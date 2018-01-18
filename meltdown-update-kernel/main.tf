@@ -65,6 +65,7 @@ resource "null_resource" "meltdown_ssh_key_add" {
       type     = "ssh"
       user     = "ec2-user"
       private_key = "${file("${path.cwd}/keys/${lookup(local.instance_private_keys, local.instances[count.index])}")}"
+      timeout = 60
     }
   }
 }
@@ -81,6 +82,7 @@ resource "null_resource" "meltdown_ssh_key_remove" {
       type     = "ssh"
       user     = "ec2-user"
       private_key = "${file("${path.cwd}/keys/${lookup(local.instance_private_keys, local.instances[count.index])}")}"
+      timeout = 60
     }
   }
 }
@@ -99,7 +101,16 @@ resource "null_resource" "meltdown_patch" {
       type     = "ssh"
       user     = "ec2-user"
       private_key = "${file("${path.cwd}/access_key/private_key")}"
+      timeout = 60
     }
+  }
+}
+
+resource "null_resource" "meltdown_kernel_tag" {
+  count = "${ var.enable_patch_kernel_tag ? length(local.running_instances) : 0 }"
+
+  provisioner "local-exec" {
+    command = "kernel=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60  -o BatchMode=yes -i ./access_key/private_key ec2-user@${lookup(local.running_instance_private_ips, local.running_instances[count.index])} 'uname -or') && aws ec2 create-tags --resources ${local.running_instances[count.index]} --tags \"Key=Kernel,Value=$kernel\""
   }
 }
 
