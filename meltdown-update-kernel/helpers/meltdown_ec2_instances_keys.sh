@@ -6,8 +6,11 @@
 #  <path to keys>
 #  <filter to use>
 
+# grab the list of keys here
+keys=`ls -m $2/keys |tr -d ' '`
+
 # find all the instances that use the keys and are running
-json=`aws ec2 describe-instances --filters "Name=instance-state-name,Values=running"  $3`
+json=`aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=key-name,Values=$keys"  $3`
 
 
 while getopts ":k:p:" opt; do
